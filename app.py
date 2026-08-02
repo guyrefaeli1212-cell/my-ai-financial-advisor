@@ -37,16 +37,25 @@ else:
         # פנייה ל-AI וקבלת תשובה
         with st.chat_message("assistant"):
             with st.spinner("חושב על תשובה..."):
+                prompt = f"אתה יועץ פיננסי מקצועי, אדיב ואחראי. ענה בצורה נגישה ומועילה בעברית.\n\nשאלה: {user_input}"
+                
+                # ניסיון ראשון עם המודל העדכני ביותר
                 try:
-                    prompt = f"אתה יועץ פיננסי מקצועי, אדיב ואחראי. ענה בצורה נגישה ומועילה בעברית.\n\nשאלה: {user_input}"
-                    
                     response = client.models.generate_content(
                         model='gemini-2.5-flash',
                         contents=prompt,
                     )
                     bot_reply = response.text
-                except Exception as e:
-                    bot_reply = f"ארעה שגיאה: {e}"
+                except Exception:
+                    # מנגנון גיבוי במידה ושם המודל משתנה
+                    try:
+                        response = client.models.generate_content(
+                            model='gemini-2.0-flash',
+                            contents=prompt,
+                        )
+                        bot_reply = response.text
+                    except Exception as err:
+                        bot_reply = f"ארעה שגיאה בחיבור לשרת: {err}"
                 
                 st.write(bot_reply)
 
