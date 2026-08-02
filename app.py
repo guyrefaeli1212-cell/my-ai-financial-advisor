@@ -1,5 +1,5 @@
 import streamlit as st
-from google import genai
+import google.generativeai as genai
 import os
 
 # הגדרת עיצוב הדף
@@ -14,7 +14,8 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     st.error("⚠️ מפתח ה-API חסר. יש להגדיר את GEMINI_API_KEY בהגדרות ה-Streamlit.")
 else:
-    client = genai.Client(api_key=api_key)
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
     # אתחול היסטוריית הצ'אט
     if "messages" not in st.session_state:
@@ -29,12 +30,10 @@ else:
 
     # תיבת קלט מהמשתמש
     if user_input := st.chat_input("שאל אותי משהו (למשל: איך לחסוך 1,000 ש\"ח בחודש?)..."):
-        # הצגת הודעת המשתמש
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.write(user_input)
 
-        # פנייה ל-AI וקבלת תשובה
         with st.chat_message("assistant"):
             with st.spinner("חושב על תשובה..."):
                 prompt = f"""
@@ -43,12 +42,12 @@ else:
                 
                 שאלה/הודעה: {user_input}
                 """
-                response = client.models.generate_content(
-                model='gemini-1.5-flash',
-                    contents=prompt
-                )
-                bot_reply = response.text
+                try:
+                    response = model.generate_content(prompt)
+                    bot_reply = response.text
+                except Exception as e:
+                    bot_reply = f"ארעה שגיאה: {e}"
+                
                 st.write(bot_reply)
 
-        # שמירת תשובת הבוט בהיסטוריה
         st.session_state.messages.append({"role": "assistant", "content": bot_reply})
