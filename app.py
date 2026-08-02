@@ -15,7 +15,9 @@ if not api_key:
     st.error("⚠️ מפתח ה-API חסר. יש להגדיר את GEMINI_API_KEY בהגדרות ה-Streamlit.")
 else:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    # חיבור לדגם הנתמך והעדכני ביותר
+    model = genai.GenerativeModel('gemini-2.0-flash')
 
     # אתחול היסטוריית הצ'אט
     if "messages" not in st.session_state:
@@ -46,7 +48,13 @@ else:
                     response = model.generate_content(prompt)
                     bot_reply = response.text
                 except Exception as e:
-                    bot_reply = f"ארעה שגיאה: {e}"
+                    # מנגנון גיבוי (Fallback) למקרה של בעיה בדגם הספציפי
+                    try:
+                        fallback_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                        response = fallback_model.generate_content(prompt)
+                        bot_reply = response.text
+                    except Exception as err:
+                        bot_reply = f"ארעה שגיאה: {err}"
                 
                 st.write(bot_reply)
 
